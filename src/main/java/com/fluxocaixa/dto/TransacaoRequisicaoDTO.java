@@ -5,14 +5,14 @@ import java.math.BigDecimal;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 
-public record TransactionRequest(
+public record TransacaoRequisicaoDTO(
         @NotNull(message = "O tipo é obrigatório (CREDIT ou DEBIT_PIX)")
-        String type,
+        String tipo,
 
         @NotNull(message = "O valor é obrigatório")
         @DecimalMin(value = "0.01", message = "O valor deve ser maior que zero")
-        BigDecimal amount,
+        BigDecimal valor,
 
-        String description
+        String descricao
 ) {
 }
