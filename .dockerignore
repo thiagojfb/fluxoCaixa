@@ -1,0 +1,9 @@
+target/
+data/
+.vscode/
+.mvn/
+*.iml
+.idea/
+*.md
+docker-compose.yml
+keycloak/

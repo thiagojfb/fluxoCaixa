@@ -1,0 +1,38 @@
+services:
+  # ── Aplicação ──
+  app:
+    build: .
+    container_name: fluxocaixa-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/data/fluxocaixa
+      SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS: "true"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/fluxocaixa
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/fluxocaixa/protocol/openid-connect/certs
+    volumes:
+      - h2-data:/data
+    depends_on:
+      keycloak:
+        condition: service_started
+    restart: unless-stopped
+
+  # ── Keycloak ──
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: fluxocaixa-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    command:
+      - start-dev
+      - --import-realm
+    restart: unless-stopped
+
+volumes:
+  h2-data:
+    driver: local

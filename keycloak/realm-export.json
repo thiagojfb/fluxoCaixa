@@ -1,0 +1,128 @@
+{
+  "realm": "fluxocaixa",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "user",
+        "description": "Usuário padrão do sistema"
+      },
+      {
+        "name": "admin",
+        "description": "Administrador do sistema"
+      }
+    ],
+    "client": {
+      "fluxocaixa-api": [
+        {
+          "name": "user",
+          "description": "Role de usuário no client"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "fluxocaixa-api",
+      "name": "Fluxo de Caixa API",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "fluxocaixa-secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:3000/*",
+        "https://oauth.pstmn.io/v1/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:3000"
+      ],
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "protocolMappers": [
+        {
+          "name": "user-id-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "sub",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "user_id",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "usuario",
+      "email": "usuario@fluxocaixa.com",
+      "firstName": "Usuário",
+      "lastName": "Teste",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "123456",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "user"
+      ],
+      "clientRoles": {
+        "fluxocaixa-api": [
+          "user"
+        ]
+      }
+    },
+    {
+      "username": "admin",
+      "email": "admin@fluxocaixa.com",
+      "firstName": "Admin",
+      "lastName": "Teste",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin",
+        "user"
+      ],
+      "clientRoles": {
+        "fluxocaixa-api": [
+          "user"
+        ]
+      }
+    }
+  ]
+}
