@@ -1,4 +1,28 @@
 services:
+  # ── Frontend (Next.js) ──
+  frontend:
+    build:
+      context: ../fluxocaixa-front
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+    container_name: fluxocaixa-front
+    ports:
+      - "3000:3000"
+    environment:
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: fluxocaixa-nextauth-secret-key-change-in-production
+      AUTH_TRUST_HOST: "true"
+      KEYCLOAK_ISSUER: http://localhost:8180/realms/fluxocaixa
+      KEYCLOAK_ISSUER_INTERNAL: http://keycloak:8080/realms/fluxocaixa
+      KEYCLOAK_CLIENT_ID: fluxocaixa-api
+      KEYCLOAK_CLIENT_SECRET: fluxocaixa-secret
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      API_URL_INTERNAL: http://app:8080
+    depends_on:
+      - app
+      - keycloak
+    restart: unless-stopped
+
   # ── Aplicação ──
   app:
     build: .
@@ -28,11 +52,16 @@ services:
       - "8180:8080"
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+      - keycloak-data:/opt/keycloak/data
     command:
       - start-dev
       - --import-realm
+      - --hostname=http://localhost:8180
+      - --hostname-backchannel-dynamic=true
     restart: unless-stopped
 
 volumes:
   h2-data:
+    driver: local
+  keycloak-data:
     driver: local

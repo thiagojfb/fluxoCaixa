@@ -1,14 +1,14 @@
-CREATE TABLE budget (
+CREATE TABLE orcamento (
     id          UUID            PRIMARY KEY,
     user_id     VARCHAR(255)    NOT NULL,
     salario     DECIMAL(19,2)   NOT NULL DEFAULT 0,
     criado_em   TIMESTAMP       NOT NULL,
     atualizado_em TIMESTAMP     NOT NULL,
     version     BIGINT          NOT NULL DEFAULT 0,
-    CONSTRAINT uk_budget_user UNIQUE (user_id)
+    CONSTRAINT uk_orcamento_usuario UNIQUE (user_id)
 );
 
-CREATE TABLE transaction (
+CREATE TABLE transacao (
     id          UUID            PRIMARY KEY,
     user_id     VARCHAR(255)    NOT NULL,
     tipo        VARCHAR(20)     NOT NULL,
@@ -20,6 +20,6 @@ CREATE TABLE transaction (
     CONSTRAINT chk_valor_positivo CHECK (valor > 0)
 );
 
-CREATE INDEX idx_transaction_user_id ON transaction (user_id);
-CREATE INDEX idx_transaction_data_hora ON transaction (data_hora);
-CREATE INDEX idx_transaction_tipo ON transaction (tipo);
+CREATE INDEX idx_transacao_usuario_id ON transacao (user_id);
+CREATE INDEX idx_transacao_data_hora ON transacao (data_hora);
+CREATE INDEX idx_transacao_tipo ON transacao (tipo);

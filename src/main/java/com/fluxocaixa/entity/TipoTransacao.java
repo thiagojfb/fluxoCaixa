@@ -1,6 +1,6 @@
 package com.fluxocaixa.entity;
 
-public enum TransactionType {
+public enum TipoTransacao {
     CREDIT,
     DEBIT_PIX
 }
