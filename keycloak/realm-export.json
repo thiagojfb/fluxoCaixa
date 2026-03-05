@@ -60,16 +60,16 @@
       ],
       "protocolMappers": [
         {
-          "name": "user-id-mapper",
+          "name": "subject",
           "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "protocolMapper": "oidc-usermodel-property-mapper",
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
-            "user.attribute": "sub",
+            "user.attribute": "id",
             "id.token.claim": "true",
             "access.token.claim": "true",
-            "claim.name": "user_id",
+            "claim.name": "sub",
             "jsonType.label": "String"
           }
         }
@@ -116,6 +116,29 @@
       ],
       "realmRoles": [
         "admin",
+        "user"
+      ],
+      "clientRoles": {
+        "fluxocaixa-api": [
+          "user"
+        ]
+      }
+    },
+    {
+      "username": "thiago",
+      "email": "thiago@fluxocaixa.com",
+      "firstName": "Thiago",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
         "user"
       ],
       "clientRoles": {

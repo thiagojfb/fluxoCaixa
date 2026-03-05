@@ -52,6 +52,15 @@ public class OrcamentoController {
     }
 
     private String obterUsuarioId(Jwt jwt) {
-        return jwt.getSubject();
+        String subject = jwt.getSubject();
+        if (subject != null && !subject.isBlank()) {
+            return subject;
+        }
+        // Fallback: usar preferred_username caso sub esteja ausente no token
+        String username = jwt.getClaimAsString("preferred_username");
+        if (username != null && !username.isBlank()) {
+            return username;
+        }
+        throw new IllegalStateException("Token JWT não contém identificação do usuário (sub ou preferred_username)");
     }
 }
