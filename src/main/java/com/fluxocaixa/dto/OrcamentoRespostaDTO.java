@@ -7,6 +7,7 @@ import java.util.UUID;
 public record OrcamentoRespostaDTO(
         UUID id,
         BigDecimal salario,
+        BigDecimal alertaCredito,
         Instant criadoEm,
         Instant atualizadoEm
 ) {

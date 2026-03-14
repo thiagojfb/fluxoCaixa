@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fluxocaixa.dto.OrcamentoRespostaDTO;
 import com.fluxocaixa.dto.SalarioRequisicaoDTO;
 import com.fluxocaixa.dto.ResumoRespostaDTO;
+import com.fluxocaixa.dto.AlertaCreditoRequisicaoDTO;
 import com.fluxocaixa.service.OrcamentoService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,14 +29,14 @@ public class OrcamentoController {
 
     private final OrcamentoService orcamentoService;
 
-    @GetMapping("/budget")
+    @GetMapping("/orcamento")
     @Operation(summary = "Obter orçamento", description = "Retorna o orçamento do usuário logado. Cria automaticamente se não existir.")
     @ApiResponse(responseCode = "200", description = "Orçamento retornado com sucesso")
     public ResponseEntity<OrcamentoRespostaDTO> obterOrcamento(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(orcamentoService.obterOuCriarOrcamento(obterUsuarioId(jwt)));
     }
 
-    @PutMapping("/budget/salary")
+    @PutMapping("/orcamento/salario")
     @Operation(summary = "Atualizar salário", description = "Atualiza o salário. É permitido reduzir abaixo do total gasto.")
     @ApiResponse(responseCode = "200", description = "Salário atualizado com sucesso")
     public ResponseEntity<OrcamentoRespostaDTO> atualizarSalario(
@@ -44,7 +45,16 @@ public class OrcamentoController {
         return ResponseEntity.ok(orcamentoService.atualizarSalario(obterUsuarioId(jwt), requisicao));
     }
 
-    @GetMapping("/summary")
+    @PutMapping("/orcamento/alerta-credito")
+    @Operation(summary = "Atualizar alerta de crédito", description = "Atualiza o valor de alerta do cartão de crédito para o usuário logado.")
+    @ApiResponse(responseCode = "200", description = "Alerta de crédito atualizado com sucesso")
+    public ResponseEntity<OrcamentoRespostaDTO> atualizarAlertaCredito(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody AlertaCreditoRequisicaoDTO requisicao) {
+        return ResponseEntity.ok(orcamentoService.atualizarAlertaCredito(obterUsuarioId(jwt), requisicao));
+    }
+
+    @GetMapping("/resumo")
     @Operation(summary = "Resumo financeiro", description = "Retorna salário, totalGastoCredito, totalGastoDebitoPix, totalGasto, saldoDisponivel e totalTransacoes")
     @ApiResponse(responseCode = "200", description = "Resumo retornado com sucesso")
     public ResponseEntity<ResumoRespostaDTO> obterResumo(@AuthenticationPrincipal Jwt jwt) {
