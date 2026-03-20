@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -64,6 +65,18 @@ public class TransacaoController {
             Pageable pageable) {
         return ResponseEntity.ok(
                 transacaoService.listar(obterUsuarioId(jwt), tipo, dataInicio, dataFim, pageable));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar transação", description = "Atualiza uma transação do usuário logado.")
+    @ApiResponse(responseCode = "200", description = "Transação atualizada com sucesso")
+    @ApiResponse(responseCode = "404", description = "Transação não encontrada")
+    public ResponseEntity<TransacaoRespostaDTO> atualizar(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID id,
+            @Valid @RequestBody TransacaoRequisicaoDTO requisicao) {
+        TransacaoRespostaDTO resposta = transacaoService.atualizar(obterUsuarioId(jwt), id, requisicao);
+        return ResponseEntity.ok(resposta);
     }
 
     @DeleteMapping("/{id}")
