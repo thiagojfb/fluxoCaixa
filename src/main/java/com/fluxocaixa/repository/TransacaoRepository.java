@@ -2,6 +2,7 @@ package com.fluxocaixa.repository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,6 +41,10 @@ public interface TransacaoRepository extends JpaRepository<Transacao, UUID> {
     @Query("SELECT COUNT(t) FROM Transacao t WHERE t.usuarioId = :usuarioId")
     long contarPorUsuarioId(@Param("usuarioId") String usuarioId);
 
-    @Query("SELECT t FROM Transacao t WHERE t.id = :id AND t.usuarioId = :usuarioId")
-    Optional<Transacao> buscarPorIdEUsuarioId(@Param("id") UUID id, @Param("usuarioId") String usuarioId);
+        @Query("SELECT t FROM Transacao t WHERE t.id = :id AND t.usuarioId = :usuarioId")
+        Optional<Transacao> buscarPorIdEUsuarioId(@Param("id") UUID id, @Param("usuarioId") String usuarioId);
+
+        List<Transacao> findByUsuarioIdAndTipo(String usuarioId, TipoTransacao tipo);
+
+        long deleteByUsuarioIdAndTipo(String usuarioId, TipoTransacao tipo);
 }

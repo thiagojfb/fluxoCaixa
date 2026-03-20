@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public record ResumoRespostaDTO(
         BigDecimal salario,
+        BigDecimal alertaCredito,
         BigDecimal totalGastoCredito,
         BigDecimal totalGastoDebitoPix,
         BigDecimal totalGasto,

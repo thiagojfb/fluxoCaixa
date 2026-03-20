@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,10 +20,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.fluxocaixa.dto.FechamentoFaturaRespostaDTO;
 import com.fluxocaixa.dto.TransacaoRequisicaoDTO;
 import com.fluxocaixa.dto.TransacaoRespostaDTO;
 import com.fluxocaixa.entity.Transacao;
+import com.fluxocaixa.mapper.HistoricoTransacaoMapper;
 import com.fluxocaixa.mapper.TransacaoMapper;
+import com.fluxocaixa.repository.HistoricoTransacaoRepository;
 import com.fluxocaixa.repository.TransacaoRepository;
 
 @SuppressWarnings("null")
@@ -32,7 +36,11 @@ class TransacaoServiceTest {
     @Mock
     private TransacaoRepository transacaoRepository;
     @Mock
+    private HistoricoTransacaoRepository historicoTransacaoRepository;
+    @Mock
     private TransacaoMapper transacaoMapper;
+    @Mock
+    private HistoricoTransacaoMapper historicoTransacaoMapper;
 
     @InjectMocks
     private TransacaoService transacaoService;
@@ -144,4 +152,64 @@ class TransacaoServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> transacaoService.remover(USUARIO_ID, transacaoId));
     }
+
+    @Test
+    @DisplayName("Deve fechar fatura transportando créditos para histórico e limpando transações atuais")
+    void deveFecharFatura() {
+        Transacao credito1 = new Transacao();
+        credito1.setId(UUID.randomUUID());
+        credito1.setUsuarioId(USUARIO_ID);
+        credito1.setValor(new BigDecimal("120.00"));
+
+        Transacao credito2 = new Transacao();
+        credito2.setId(UUID.randomUUID());
+        credito2.setUsuarioId(USUARIO_ID);
+        credito2.setValor(new BigDecimal("80.00"));
+
+        when(transacaoRepository.findByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.CREDIT))
+                .thenReturn(List.of(credito1, credito2));
+        when(transacaoRepository.deleteByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.CREDIT))
+            .thenReturn(2L);
+        when(historicoTransacaoRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        FechamentoFaturaRespostaDTO resposta = transacaoService.fecharFatura(USUARIO_ID);
+
+        assertNotNull(resposta.fechadoEm());
+        assertEquals(2L, resposta.quantidadeTransacoesCreditoTransportadas());
+        assertEquals(new BigDecimal("200.00"), resposta.totalFaturaFechada());
+        assertEquals(2L, resposta.quantidadeTransacoesRemovidas());
+        verify(historicoTransacaoRepository).saveAll(any());
+        verify(transacaoRepository)
+            .deleteByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.CREDIT);
+    }
+
+        @Test
+        @DisplayName("Deve fechar saldo débito/PIX transportando débito/PIX para histórico")
+        void deveFecharSaldoDebitoPix() {
+        Transacao debito1 = new Transacao();
+        debito1.setId(UUID.randomUUID());
+        debito1.setUsuarioId(USUARIO_ID);
+        debito1.setValor(new BigDecimal("70.00"));
+
+        Transacao debito2 = new Transacao();
+        debito2.setId(UUID.randomUUID());
+        debito2.setUsuarioId(USUARIO_ID);
+        debito2.setValor(new BigDecimal("30.00"));
+
+        when(transacaoRepository.findByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.DEBIT_PIX))
+            .thenReturn(List.of(debito1, debito2));
+        when(transacaoRepository.deleteByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.DEBIT_PIX))
+            .thenReturn(2L);
+        when(historicoTransacaoRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        FechamentoFaturaRespostaDTO resposta = transacaoService.fecharSaldoDebitoPix(USUARIO_ID);
+
+        assertNotNull(resposta.fechadoEm());
+        assertEquals(2L, resposta.quantidadeTransacoesCreditoTransportadas());
+        assertEquals(new BigDecimal("100.00"), resposta.totalFaturaFechada());
+        assertEquals(2L, resposta.quantidadeTransacoesRemovidas());
+        verify(historicoTransacaoRepository).saveAll(any());
+        verify(transacaoRepository)
+            .deleteByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.DEBIT_PIX);
+        }
 }

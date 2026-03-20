@@ -64,7 +64,7 @@ class OrcamentoServiceTest {
         when(orcamentoRepository.buscarPorUsuarioId(USUARIO_ID)).thenReturn(Optional.empty());
         when(orcamentoRepository.save(any(Orcamento.class))).thenAnswer(inv -> Objects.requireNonNull((Orcamento) inv.getArgument(0)));
         when(orcamentoMapper.toDTO(any())).thenReturn(
-                new OrcamentoRespostaDTO(orcamento.getId(), BigDecimal.ZERO, Instant.now(), Instant.now()));
+            new OrcamentoRespostaDTO(orcamento.getId(), BigDecimal.ZERO, null, Instant.now(), Instant.now()));
 
         OrcamentoRespostaDTO resposta = orcamentoService.obterOuCriarOrcamento(USUARIO_ID);
 
@@ -78,7 +78,7 @@ class OrcamentoServiceTest {
     void deveRetornarOrcamentoExistente() {
         when(orcamentoRepository.buscarPorUsuarioId(USUARIO_ID)).thenReturn(Optional.of(orcamento));
         when(orcamentoMapper.toDTO(orcamento)).thenReturn(
-                new OrcamentoRespostaDTO(orcamento.getId(), orcamento.getSalario(), orcamento.getCriadoEm(), orcamento.getAtualizadoEm()));
+            new OrcamentoRespostaDTO(orcamento.getId(), orcamento.getSalario(), orcamento.getAlertaCredito(), orcamento.getCriadoEm(), orcamento.getAtualizadoEm()));
 
         OrcamentoRespostaDTO resposta = orcamentoService.obterOuCriarOrcamento(USUARIO_ID);
 
@@ -94,7 +94,7 @@ class OrcamentoServiceTest {
         when(orcamentoRepository.save(any(Orcamento.class))).thenAnswer(inv -> Objects.requireNonNull((Orcamento) inv.getArgument(0)));
         when(orcamentoMapper.toDTO(any())).thenAnswer(inv -> {
             Orcamento o = Objects.requireNonNull((Orcamento) inv.getArgument(0));
-            return new OrcamentoRespostaDTO(o.getId(), o.getSalario(), o.getCriadoEm(), o.getAtualizadoEm());
+            return new OrcamentoRespostaDTO(o.getId(), o.getSalario(), o.getAlertaCredito(), o.getCriadoEm(), o.getAtualizadoEm());
         });
 
         SalarioRequisicaoDTO requisicao = new SalarioRequisicaoDTO(new BigDecimal("15000.00"));
@@ -110,7 +110,7 @@ class OrcamentoServiceTest {
         when(orcamentoRepository.save(any(Orcamento.class))).thenAnswer(inv -> Objects.requireNonNull((Orcamento) inv.getArgument(0)));
         when(orcamentoMapper.toDTO(any())).thenAnswer(inv -> {
             Orcamento o = Objects.requireNonNull((Orcamento) inv.getArgument(0));
-            return new OrcamentoRespostaDTO(o.getId(), o.getSalario(), o.getCriadoEm(), o.getAtualizadoEm());
+            return new OrcamentoRespostaDTO(o.getId(), o.getSalario(), o.getAlertaCredito(), o.getCriadoEm(), o.getAtualizadoEm());
         });
 
         SalarioRequisicaoDTO requisicao = new SalarioRequisicaoDTO(new BigDecimal("1000.00"));
@@ -132,6 +132,7 @@ class OrcamentoServiceTest {
         ResumoRespostaDTO resumo = orcamentoService.obterResumo(USUARIO_ID);
 
         assertEquals(new BigDecimal("10000.00"), resumo.salario());
+        assertEquals(null, resumo.alertaCredito());
         assertEquals(new BigDecimal("3000.00"), resumo.totalGastoCredito());
         assertEquals(new BigDecimal("3000.00"), resumo.totalGastoDebitoPix());
         assertEquals(new BigDecimal("6000.00"), resumo.totalGasto());

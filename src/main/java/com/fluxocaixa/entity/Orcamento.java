@@ -33,6 +33,9 @@ public class Orcamento {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal salario = BigDecimal.ZERO;
 
+    @Column(name = "alerta_credito", precision = 19, scale = 2)
+    private BigDecimal alertaCredito;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 

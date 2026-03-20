@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fluxocaixa.dto.OrcamentoRespostaDTO;
 import com.fluxocaixa.dto.SalarioRequisicaoDTO;
 import com.fluxocaixa.dto.ResumoRespostaDTO;
+import com.fluxocaixa.dto.AlertaCreditoRequisicaoDTO;
 import com.fluxocaixa.entity.Orcamento;
 import com.fluxocaixa.entity.TipoTransacao;
 import com.fluxocaixa.mapper.OrcamentoMapper;
@@ -45,6 +46,17 @@ public class OrcamentoService {
     }
 
     /**
+     * Atualiza o valor de alerta do cartão de crédito do usuário.
+     */
+    @Transactional
+    public OrcamentoRespostaDTO atualizarAlertaCredito(String usuarioId, AlertaCreditoRequisicaoDTO requisicao) {
+        Orcamento orcamento = buscarOuCriar(usuarioId);
+        orcamento.setAlertaCredito(requisicao.alertaCredito());
+        orcamento = orcamentoRepository.save(orcamento);
+        return orcamentoMapper.toDTO(orcamento);
+    }
+
+    /**
      * Retorna o resumo financeiro do usuário.
      */
     @Transactional(readOnly = true)
@@ -61,6 +73,7 @@ public class OrcamentoService {
 
         return new ResumoRespostaDTO(
                 orcamento.getSalario(),
+            orcamento.getAlertaCredito(),
                 totalCredito,
                 totalDebitoPix,
                 totalGasto,
