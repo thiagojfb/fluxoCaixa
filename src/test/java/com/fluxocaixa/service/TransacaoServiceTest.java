@@ -50,7 +50,7 @@ class TransacaoServiceTest {
     @Test
     @DisplayName("Deve criar transação CREDIT com sucesso")
     void deveCriarTransacaoCreditoComSucesso() {
-        TransacaoRequisicaoDTO requisicao = new TransacaoRequisicaoDTO("CREDIT", new BigDecimal("100.00"), "Teste crédito");
+        TransacaoRequisicaoDTO requisicao = new TransacaoRequisicaoDTO("CREDIT", new BigDecimal("100.00"), "Teste crédito", null);
 
         when(transacaoRepository.save(any(Transacao.class))).thenAnswer(inv -> {
             Transacao t = inv.getArgument(0);
@@ -61,7 +61,7 @@ class TransacaoServiceTest {
         when(transacaoMapper.toDTO(any())).thenAnswer(inv -> {
             Transacao t = inv.getArgument(0);
             return new TransacaoRespostaDTO(t.getId(), t.getTipo().name(), t.getDescricao(),
-                    t.getValor(), t.getDataHora(), t.getCriadoEm());
+                    t.getValor(), t.getQuantidadeVezes(), t.getDataHora(), t.getCriadoEm());
         });
 
         TransacaoRespostaDTO resposta = transacaoService.criar(USUARIO_ID, requisicao);
@@ -69,13 +69,14 @@ class TransacaoServiceTest {
         assertNotNull(resposta);
         assertEquals("CREDIT", resposta.tipo());
         assertEquals(new BigDecimal("100.00"), resposta.valor());
+        assertEquals(1, resposta.quantidadeVezes());
         verify(transacaoRepository).save(any(Transacao.class));
     }
 
     @Test
     @DisplayName("Deve criar transação DEBIT_PIX com sucesso")
     void deveCriarTransacaoDebitoPixComSucesso() {
-        TransacaoRequisicaoDTO requisicao = new TransacaoRequisicaoDTO("DEBIT_PIX", new BigDecimal("250.00"), "PIX");
+        TransacaoRequisicaoDTO requisicao = new TransacaoRequisicaoDTO("DEBIT_PIX", new BigDecimal("250.00"), "PIX", 3);
 
         when(transacaoRepository.save(any(Transacao.class))).thenAnswer(inv -> {
             Transacao t = inv.getArgument(0);
@@ -86,7 +87,7 @@ class TransacaoServiceTest {
         when(transacaoMapper.toDTO(any())).thenAnswer(inv -> {
             Transacao t = inv.getArgument(0);
             return new TransacaoRespostaDTO(t.getId(), t.getTipo().name(), t.getDescricao(),
-                    t.getValor(), t.getDataHora(), t.getCriadoEm());
+                    t.getValor(), t.getQuantidadeVezes(), t.getDataHora(), t.getCriadoEm());
         });
 
         TransacaoRespostaDTO resposta = transacaoService.criar(USUARIO_ID, requisicao);
@@ -94,12 +95,13 @@ class TransacaoServiceTest {
         assertNotNull(resposta);
         assertEquals("DEBIT_PIX", resposta.tipo());
         assertEquals(new BigDecimal("250.00"), resposta.valor());
+        assertEquals(3, resposta.quantidadeVezes());
     }
 
     @Test
     @DisplayName("Deve rejeitar tipo de transação inválido")
     void deveRejeitarTipoInvalido() {
-        TransacaoRequisicaoDTO requisicao = new TransacaoRequisicaoDTO("INVALID", new BigDecimal("100.00"), null);
+        TransacaoRequisicaoDTO requisicao = new TransacaoRequisicaoDTO("INVALID", new BigDecimal("100.00"), null, null);
 
         assertThrows(IllegalArgumentException.class,
                 () -> transacaoService.criar(USUARIO_ID, requisicao));
@@ -108,7 +110,7 @@ class TransacaoServiceTest {
     @Test
     @DisplayName("Deve permitir transação que ultrapasse o salário (sem bloqueio)")
     void devePermitirTransacaoExcedendoSalario() {
-        TransacaoRequisicaoDTO requisicao = new TransacaoRequisicaoDTO("CREDIT", new BigDecimal("999999.00"), "Grande compra");
+        TransacaoRequisicaoDTO requisicao = new TransacaoRequisicaoDTO("CREDIT", new BigDecimal("999999.00"), "Grande compra", null);
 
         when(transacaoRepository.save(any(Transacao.class))).thenAnswer(inv -> {
             Transacao t = inv.getArgument(0);
@@ -119,7 +121,7 @@ class TransacaoServiceTest {
         when(transacaoMapper.toDTO(any())).thenAnswer(inv -> {
             Transacao t = inv.getArgument(0);
             return new TransacaoRespostaDTO(t.getId(), t.getTipo().name(), t.getDescricao(),
-                    t.getValor(), t.getDataHora(), t.getCriadoEm());
+                    t.getValor(), t.getQuantidadeVezes(), t.getDataHora(), t.getCriadoEm());
         });
 
         TransacaoRespostaDTO resposta = transacaoService.criar(USUARIO_ID, requisicao);
@@ -160,16 +162,17 @@ class TransacaoServiceTest {
         credito1.setId(UUID.randomUUID());
         credito1.setUsuarioId(USUARIO_ID);
         credito1.setValor(new BigDecimal("120.00"));
+        credito1.setQuantidadeVezes(3);
 
         Transacao credito2 = new Transacao();
         credito2.setId(UUID.randomUUID());
         credito2.setUsuarioId(USUARIO_ID);
         credito2.setValor(new BigDecimal("80.00"));
+        credito2.setQuantidadeVezes(1);
 
         when(transacaoRepository.findByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.CREDIT))
                 .thenReturn(List.of(credito1, credito2));
-        when(transacaoRepository.deleteByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.CREDIT))
-            .thenReturn(2L);
+        when(transacaoRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
         when(historicoTransacaoRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
 
         FechamentoFaturaRespostaDTO resposta = transacaoService.fecharFatura(USUARIO_ID);
@@ -177,10 +180,10 @@ class TransacaoServiceTest {
         assertNotNull(resposta.fechadoEm());
         assertEquals(2L, resposta.quantidadeTransacoesCreditoTransportadas());
         assertEquals(new BigDecimal("200.00"), resposta.totalFaturaFechada());
-        assertEquals(2L, resposta.quantidadeTransacoesRemovidas());
+        assertEquals(1L, resposta.quantidadeTransacoesRemovidas());
         verify(historicoTransacaoRepository).saveAll(any());
-        verify(transacaoRepository)
-            .deleteByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.CREDIT);
+        verify(transacaoRepository).saveAll(any());
+        verify(transacaoRepository).deleteAll(any());
     }
 
         @Test
@@ -190,16 +193,17 @@ class TransacaoServiceTest {
         debito1.setId(UUID.randomUUID());
         debito1.setUsuarioId(USUARIO_ID);
         debito1.setValor(new BigDecimal("70.00"));
+        debito1.setQuantidadeVezes(2);
 
         Transacao debito2 = new Transacao();
         debito2.setId(UUID.randomUUID());
         debito2.setUsuarioId(USUARIO_ID);
         debito2.setValor(new BigDecimal("30.00"));
+        debito2.setQuantidadeVezes(1);
 
         when(transacaoRepository.findByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.DEBIT_PIX))
             .thenReturn(List.of(debito1, debito2));
-        when(transacaoRepository.deleteByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.DEBIT_PIX))
-            .thenReturn(2L);
+        when(transacaoRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
         when(historicoTransacaoRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
 
         FechamentoFaturaRespostaDTO resposta = transacaoService.fecharSaldoDebitoPix(USUARIO_ID);
@@ -207,9 +211,9 @@ class TransacaoServiceTest {
         assertNotNull(resposta.fechadoEm());
         assertEquals(2L, resposta.quantidadeTransacoesCreditoTransportadas());
         assertEquals(new BigDecimal("100.00"), resposta.totalFaturaFechada());
-        assertEquals(2L, resposta.quantidadeTransacoesRemovidas());
+        assertEquals(1L, resposta.quantidadeTransacoesRemovidas());
         verify(historicoTransacaoRepository).saveAll(any());
-        verify(transacaoRepository)
-            .deleteByUsuarioIdAndTipo(USUARIO_ID, com.fluxocaixa.entity.TipoTransacao.DEBIT_PIX);
+        verify(transacaoRepository).saveAll(any());
+        verify(transacaoRepository).deleteAll(any());
         }
 }

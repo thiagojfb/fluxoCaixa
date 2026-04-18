@@ -9,6 +9,7 @@ public record HistoricoTransacaoRespostaDTO(
         String tipo,
         String descricao,
         BigDecimal valor,
+        Integer quantidadeVezes,
         Instant dataHora,
         Instant criadoEm,
         Instant fechadoEm

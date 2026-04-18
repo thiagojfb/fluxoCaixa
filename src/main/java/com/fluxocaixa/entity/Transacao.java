@@ -39,6 +39,9 @@ public class Transacao {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal valor;
 
+    @Column(name = "quantidade_vezes", nullable = false)
+    private Integer quantidadeVezes;
+
     @Column(name = "data_hora", nullable = false)
     private Instant dataHora;
 
@@ -50,6 +53,7 @@ public class Transacao {
         if (id == null) id = UUID.randomUUID();
         Instant agora = Instant.now();
         if (dataHora == null) dataHora = agora;
+        if (quantidadeVezes == null) quantidadeVezes = 1;
         criadoEm = agora;
     }
 }

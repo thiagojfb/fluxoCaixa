@@ -2,6 +2,7 @@ package com.fluxocaixa.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -46,6 +47,7 @@ public class TransacaoService {
         transacao.setTipo(tipo);
         transacao.setValor(requisicao.valor());
         transacao.setDescricao(requisicao.descricao());
+        transacao.setQuantidadeVezes(obterQuantidadeVezesCriacao(requisicao));
         transacao.setDataHora(Instant.now());
 
         transacao = transacaoRepository.save(transacao);
@@ -83,6 +85,9 @@ public class TransacaoService {
         transacao.setTipo(converterTipo(requisicao.tipo()));
         transacao.setValor(requisicao.valor());
         transacao.setDescricao(requisicao.descricao());
+        if (requisicao.quantidadeVezes() != null) {
+            transacao.setQuantidadeVezes(requisicao.quantidadeVezes());
+        }
 
         Transacao atualizada = transacaoRepository.save(transacao);
         return transacaoMapper.toDTO(atualizada);
@@ -138,6 +143,7 @@ public class TransacaoService {
         historico.setTipo(transacao.getTipo());
         historico.setDescricao(transacao.getDescricao());
         historico.setValor(transacao.getValor());
+        historico.setQuantidadeVezes(transacao.getQuantidadeVezes());
         historico.setDataHora(transacao.getDataHora());
         historico.setCriadoEm(transacao.getCriadoEm());
         historico.setFechadoEm(fechadoEm);
@@ -154,15 +160,39 @@ public class TransacaoService {
             .map(Transacao::getValor)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (!transacoes.isEmpty()) {
-            List<HistoricoTransacao> historico = transacoes.stream()
-                .map(t -> paraHistorico(t, fechadoEm))
-                .toList();
+        List<HistoricoTransacao> historico = transacoes.stream()
+            .map(t -> paraHistorico(t, fechadoEm))
+            .toList();
+
+        if (!historico.isEmpty()) {
             historicoTransacaoRepository.saveAll(Objects.requireNonNull(historico));
         }
 
-        long quantidadeRemovidas = transacaoRepository
-            .deleteByUsuarioIdAndTipo(usuarioId, tipo);
+        List<Transacao> transacoesParaAtualizar = new ArrayList<>();
+        List<Transacao> transacoesParaRemover = new ArrayList<>();
+
+        for (Transacao transacao : transacoes) {
+            int quantidadeAtual = transacao.getQuantidadeVezes() == null
+                ? 1
+                : transacao.getQuantidadeVezes();
+
+            if (quantidadeAtual > 1) {
+                transacao.setQuantidadeVezes(quantidadeAtual - 1);
+                transacoesParaAtualizar.add(transacao);
+            } else {
+                transacoesParaRemover.add(transacao);
+            }
+        }
+
+        if (!transacoesParaAtualizar.isEmpty()) {
+            transacaoRepository.saveAll(transacoesParaAtualizar);
+        }
+
+        if (!transacoesParaRemover.isEmpty()) {
+            transacaoRepository.deleteAll(transacoesParaRemover);
+        }
+
+        long quantidadeRemovidas = transacoesParaRemover.size();
 
         return new FechamentoFaturaRespostaDTO(
             fechadoEm,
@@ -171,6 +201,10 @@ public class TransacaoService {
             quantidadeRemovidas
         );
         }
+
+    private int obterQuantidadeVezesCriacao(TransacaoRequisicaoDTO requisicao) {
+        return requisicao.quantidadeVezes() == null ? 1 : requisicao.quantidadeVezes();
+    }
 
     private TipoTransacao converterTipo(String tipo) {
         try {

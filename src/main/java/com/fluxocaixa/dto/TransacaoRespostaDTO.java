@@ -9,6 +9,7 @@ public record TransacaoRespostaDTO(
         String tipo,
         String descricao,
         BigDecimal valor,
+        Integer quantidadeVezes,
         Instant dataHora,
         Instant criadoEm
 ) {

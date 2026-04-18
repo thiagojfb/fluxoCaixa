@@ -39,6 +39,9 @@ public class HistoricoTransacao {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal valor;
 
+    @Column(name = "quantidade_vezes", nullable = false)
+    private Integer quantidadeVezes;
+
     @Column(name = "data_hora", nullable = false)
     private Instant dataHora;
 
@@ -54,5 +57,6 @@ public class HistoricoTransacao {
         if (criadoEm == null) criadoEm = Instant.now();
         if (dataHora == null) dataHora = Instant.now();
         if (fechadoEm == null) fechadoEm = Instant.now();
+        if (quantidadeVezes == null) quantidadeVezes = 1;
     }
 }
